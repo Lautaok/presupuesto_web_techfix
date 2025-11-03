@@ -8,8 +8,7 @@
         /* ESTILOS GENERALES (PARA LA PANTALLA) */
         body {
             font-family: 'Roboto', sans-serif;
-            background: #020024;
-            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(8, 7, 105, 1) 17%, rgba(9, 9, 121, 1) 89%, rgba(0, 0, 0, 1) 100%);
+            background-color: #f4f7f6;
             color: #333;
             display: flex;
             justify-content: center;
@@ -28,7 +27,7 @@
         }
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { color: #008CBA; }
-        .header-print-only { display: none; }
+        .header-print-only { display: none; } /* Oculto en pantalla */
 
         .comprobante-info {
             display: flex;
@@ -67,19 +66,69 @@
         .seccion-guardar { text-align: center; margin-top: 30px; }
         .btn-guardar { background-color: #008CBA; color: white; font-size: 1.1em; padding: 15px 30px; }
 
-        /* --- ESTILOS PARA IMPRESIÓN --- */
+        /* --- 🔥 NUEVOS ESTILOS DE IMPRESIÓN (SOLUCIÓN MÓVIL) 🔥 --- */
         @media print {
-            body { background-color: #fff; padding: 0; margin: 0; }
-            .no-print { display: none !important; }
-            .container { width: 100%; height: auto; box-shadow: none; border-radius: 0; padding: 1.5cm; }
-            .header-print-only { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #008CBA; padding-bottom: 10px; }
+            /* 1. Oculta todo por defecto */
+            body * {
+                visibility: hidden;
+            }
+            
+            /* 2. Muestra solo el contenedor del presupuesto y sus hijos */
+            .container, .container * {
+                visibility: visible;
+            }
+            
+            /* 3. Asegura que el contenedor ocupe toda la página */
+            .container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 1.5cm;
+                box-shadow: none;
+                border: none;
+            }
+            
+            /* 4. Oculta los elementos 'no-print' que están DENTRO del contenedor */
+            .no-print, .no-print * {
+                display: none !important;
+            }
+
+            /* 5. Muestra el cabezal de impresión y aplica estilos */
+            .header-print-only {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #008CBA;
+                padding-bottom: 10px;
+            }
             .header-print-only img { width: 150px; margin-bottom: 10px; }
             .header-print-only h1 { font-size: 2.5em; color: #008CBA; margin: 0; font-weight: 700; }
             .header-print-only p { font-size: 1em; color: #555; margin: 5px 0; }
-            .comprobante-info { display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; border-bottom: none; padding-bottom: 0; margin-bottom: 20px; }
+            
+            .comprobante-info {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+                border-bottom: none;
+            }
             .info-numeracion { text-align: right; }
-            input, textarea { border: none !important; background-color: transparent !important; padding: 0; font-size: 12pt; }
-            table, th, td { border: 1px solid #666; font-size: 11pt; padding: 8px; }
+            
+            input, textarea {
+                border: none !important;
+                background-color: transparent !important;
+                padding: 0;
+                font-size: 12pt;
+                -webkit-print-color-adjust: exact; /* Fuerza la impresión de estilos */
+                color-adjust: exact;
+            }
+            table, th, td {
+                border: 1px solid #666;
+                font-size: 11pt;
+                padding: 8px;
+            }
             .seccion-total { font-size: 16pt; }
         }
     </style>
@@ -89,8 +138,9 @@
     <div class="container" id="presupuesto-container">
         <div class="header no-print">
             <img src="img/logo500x500.png" alt="Logo de Tech-fix" style="width: 150px; margin-bottom: 10px;">
-            <p><strong>Reparación y Mantenimiento de PC</strong></p>
+            <p>Reparación y Mantenimiento de PC</p>
         </div>
+        
         <div class="header-print-only">
             <img src="img/logo500x500.png" alt="Logo de Tech-fix">
             <h1>Tech-fix</h1>
