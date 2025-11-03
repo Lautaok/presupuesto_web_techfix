@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuestos - Tech-fix</title>
+    <style>
+        /* ESTILOS GENERALES (PARA LA PANTALLA) */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #020024;
+            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(8, 7, 105, 1) 17%, rgba(9, 9, 121, 1) 89%, rgba(0, 0, 0, 1) 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        img {
+            border-radius: 50%;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: #008CBA; }
+        .header-print-only { display: none; }
+
+        .comprobante-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #008CBA;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .info-contacto-print {
+            line-height: 1.4;
+            font-size: 0.9em;
+        }
+        .info-numeracion {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .numero-comprobante, .fecha-comprobante {
+            font-weight: bold;
+        }
+
+        .seccion-cliente { margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; font-family: 'Roboto', sans-serif; box-sizing: border-box; resize: vertical; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f8f8; }
+        .descripcion-col { width: 70%; }
+        .precio-col { width: 20%; }
+        .item-row input { width: 95%; }
+        .btn-accion, .btn-remover-item, .btn-guardar { border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #btn-agregar-item { background-color: #e0e0e0; margin-top: 10px; }
+        .btn-remover-item { background-color: #fdd; }
+        .seccion-total { text-align: right; margin-top: 20px; font-size: 1.8em; font-weight: bold; color: #008CBA; }
+        .seccion-guardar { text-align: center; margin-top: 30px; }
+        .btn-guardar { background-color: #008CBA; color: white; font-size: 1.1em; padding: 15px 30px; }
+
+        /* --- ESTILOS PARA IMPRESIÓN --- */
+        @media print {
+            body { background-color: #fff; padding: 0; margin: 0; }
+            .no-print { display: none !important; }
+            .container { width: 100%; height: auto; box-shadow: none; border-radius: 0; padding: 1.5cm; }
+            .header-print-only { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #008CBA; padding-bottom: 10px; }
+            .header-print-only img { width: 150px; margin-bottom: 10px; }
+            .header-print-only h1 { font-size: 2.5em; color: #008CBA; margin: 0; font-weight: 700; }
+            .header-print-only p { font-size: 1em; color: #555; margin: 5px 0; }
+            .comprobante-info { display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; border-bottom: none; padding-bottom: 0; margin-bottom: 20px; }
+            .info-numeracion { text-align: right; }
+            input, textarea { border: none !important; background-color: transparent !important; padding: 0; font-size: 12pt; }
+            table, th, td { border: 1px solid #666; font-size: 11pt; padding: 8px; }
+            .seccion-total { font-size: 16pt; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="presupuesto-container">
+        <div class="header no-print">
+            <img src="img/logo500x500.png" alt="Logo de Tech-fix" style="width: 150px; margin-bottom: 10px;">
+            <p><strong>Reparación y Mantenimiento de PC</strong></p>
+        </div>
+        <div class="header-print-only no-print">
+            <img src="img/logo500x500.png" alt="Logo de Tech-fix">
+            <h1>Tech-fix</h1>
+            <p>Reparación y Mantenimiento de PC</p>
+        </div>
+
+        <div class="comprobante-info">
+            <div class="info-contacto-print">
+                <strong>Tech-fix</strong><br>
+                <small>Contacto: @tech.fix.ok | Tel: 3888343801</small>
+            </div>
+            <div class="info-numeracion">
+                <div>
+                    <span>Presupuesto N°:</span>
+                    <span class="numero-comprobante" id="numero-comprobante"></span>
+                </div>
+                <div>
+                    <span>Fecha:</span>
+                    <span class="fecha-comprobante" id="fecha-actual"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="seccion-cliente">
+            <label for="cliente">Cliente:</label>
+            <input type="text" id="cliente" required>
+        </div>
+
+        <div class="seccion-cliente">
+            <label for="equipo">Equipo:</label>
+            <textarea id="equipo" rows="1" required></textarea>
+        </div>
+
+        <div class="seccion-cliente">
+            <label for="falla">Falla a detallar:</label>
+            <textarea id="falla" rows="1" required></textarea>
+        </div>
+        <div class="seccion-detalle">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="descripcion-col">Descripción</th>
+                        <th class="precio-col">Precio</th>
+                        <th class="accion-col no-print"></th>
+                    </tr>
+                </thead>
+                <tbody id="items-container"></tbody>
+            </table>
+            <button type="button" id="btn-agregar-item" class="btn-accion no-print">+ Agregar Ítem</button>
+        </div>
+        
+        <div class="seccion-total">
+            <span>TOTAL: $</span>
+            <span id="total-presupuesto">0.00</span>
+        </div>
+
+        <div class="seccion-guardar no-print">
+            <button type="button" id="btn-guardar" class="btn-guardar">💾 Guardar y Generar PDF</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- CONSTANTES DE ELEMENTOS DEL DOM ---
+        const btnGuardar = document.getElementById('btn-guardar');
+        const itemsContainer = document.getElementById('items-container');
+        const btnAgregarItem = document.getElementById('btn-agregar-item');
+        const totalPresupuestoEl = document.getElementById('total-presupuesto');
+        const clienteInput = document.getElementById('cliente');
+        const equipoInput = document.getElementById('equipo');
+        const fallaInput = document.getElementById('falla');
+        const numeroComprobanteEl = document.getElementById('numero-comprobante');
+        const fechaActualEl = document.getElementById('fecha-actual');
+
+        // --- FUNCIONES DE LÓGICA ---
+
+        function getProximoNumero() {
+            const ultimoNumero = parseInt(localStorage.getItem('ultimoPresupuestoId') || '0');
+            return ultimoNumero + 1;
+        }
+
+        function formatarNumero(num) {
+            return `0001-${String(num).padStart(8, '0')}`;
+        }
+
+        function mostrarFechaActual() {
+            const hoy = new Date();
+            const dia = String(hoy.getDate()).padStart(2, '0');
+            const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+            const anio = hoy.getFullYear();
+            fechaActualEl.textContent = `${dia}/${mes}/${anio}`;
+        }
+
+        const agregarItem = () => {
+            const row = document.createElement('tr');
+            row.classList.add('item-row');
+            row.innerHTML = `
+                <td><input type="text" class="item-descripcion" required placeholder="Ej: Cambio de disco duro"></td>
+                <td><input type="number" class="item-precio" step="0.01" min="0" required placeholder="0.00"></td>
+                <td class="no-print"><button type="button" class="btn-remover-item">X</button></td>
+            `;
+            itemsContainer.appendChild(row);
+        };
+
+        const calcularTotal = () => {
+            let total = 0;
+            document.querySelectorAll('.item-precio').forEach(input => {
+                total += parseFloat(input.value || 0);
+            });
+            totalPresupuestoEl.textContent = total.toFixed(2);
+        };
+
+        const inicializarFormulario = () => {
+            clienteInput.value = '';
+            equipoInput.value = '';
+            fallaInput.value = '';
+            itemsContainer.innerHTML = '';
+            agregarItem();
+            calcularTotal();
+            numeroComprobanteEl.textContent = formatarNumero(getProximoNumero());
+            mostrarFechaActual();
+        };
+        
+        // --- MANEJO DE EVENTOS ---
+        btnAgregarItem.addEventListener('click', agregarItem);
+        itemsContainer.addEventListener('input', calcularTotal);
+        itemsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-remover-item') && itemsContainer.children.length > 1) {
+                e.target.closest('.item-row').remove();
+                calcularTotal();
+            }
+        });
+
+        btnGuardar.addEventListener('click', () => {
+            const items = [];
+            let formularioValido = true;
+            document.querySelectorAll('.item-row').forEach(row => {
+                const descripcion = row.querySelector('.item-descripcion').value;
+                const precio = row.querySelector('.item-precio').value;
+                if (!descripcion || !precio) { formularioValido = false; }
+                items.push({ descripcion, precio });
+            });
+
+            if (!clienteInput.value || !equipoInput.value || !fallaInput.value || !formularioValido) {
+                alert('Por favor, completa todos los campos: cliente, equipo, falla y los detalles de cada ítem.');
+                return;
+            }
+
+            const proximoNumero = getProximoNumero();
+            localStorage.setItem('ultimoPresupuestoId', proximoNumero);
+
+            window.print();
+            
+            inicializarFormulario();
+        });
+
+        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
+        inicializarFormulario();
+    });
+    </script>
+</body>
+</html>
