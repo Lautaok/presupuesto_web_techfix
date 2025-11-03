@@ -8,7 +8,8 @@
         /* ESTILOS GENERALES (PARA LA PANTALLA) */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f4f7f6;
+            background: #020024;
+            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(8, 7, 105, 1) 17%, rgba(9, 9, 121, 1) 89%, rgba(0, 0, 0, 1) 100%);
             color: #333;
             display: flex;
             justify-content: center;
@@ -66,19 +67,14 @@
         .seccion-guardar { text-align: center; margin-top: 30px; }
         .btn-guardar { background-color: #008CBA; color: white; font-size: 1.1em; padding: 15px 30px; }
 
-        /* --- 🔥 NUEVOS ESTILOS DE IMPRESIÓN (SOLUCIÓN MÓVIL) 🔥 --- */
+        /* --- ESTILOS DE IMPRESIÓN CORREGIDOS PARA MÓVIL --- */
         @media print {
-            /* 1. Oculta todo por defecto */
             body * {
                 visibility: hidden;
             }
-            
-            /* 2. Muestra solo el contenedor del presupuesto y sus hijos */
             .container, .container * {
                 visibility: visible;
             }
-            
-            /* 3. Asegura que el contenedor ocupe toda la página */
             .container {
                 position: absolute;
                 left: 0;
@@ -89,13 +85,9 @@
                 box-shadow: none;
                 border: none;
             }
-            
-            /* 4. Oculta los elementos 'no-print' que están DENTRO del contenedor */
             .no-print, .no-print * {
                 display: none !important;
             }
-
-            /* 5. Muestra el cabezal de impresión y aplica estilos */
             .header-print-only {
                 display: block !important;
                 text-align: center;
@@ -106,7 +98,6 @@
             .header-print-only img { width: 150px; margin-bottom: 10px; }
             .header-print-only h1 { font-size: 2.5em; color: #008CBA; margin: 0; font-weight: 700; }
             .header-print-only p { font-size: 1em; color: #555; margin: 5px 0; }
-            
             .comprobante-info {
                 display: flex;
                 flex-direction: row;
@@ -115,13 +106,12 @@
                 border-bottom: none;
             }
             .info-numeracion { text-align: right; }
-            
             input, textarea {
                 border: none !important;
                 background-color: transparent !important;
                 padding: 0;
                 font-size: 12pt;
-                -webkit-print-color-adjust: exact; /* Fuerza la impresión de estilos */
+                -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
             table, th, td {
@@ -204,7 +194,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- CONSTANTES DE ELEMENTOS DEL DOM ---
+        // ... (constantes y funciones... no cambian)
         const btnGuardar = document.getElementById('btn-guardar');
         const itemsContainer = document.getElementById('items-container');
         const btnAgregarItem = document.getElementById('btn-agregar-item');
@@ -214,18 +204,13 @@
         const fallaInput = document.getElementById('falla');
         const numeroComprobanteEl = document.getElementById('numero-comprobante');
         const fechaActualEl = document.getElementById('fecha-actual');
-
-        // --- FUNCIONES DE LÓGICA ---
-
         function getProximoNumero() {
             const ultimoNumero = parseInt(localStorage.getItem('ultimoPresupuestoId') || '0');
             return ultimoNumero + 1;
         }
-
         function formatarNumero(num) {
             return `0001-${String(num).padStart(8, '0')}`;
         }
-
         function mostrarFechaActual() {
             const hoy = new Date();
             const dia = String(hoy.getDate()).padStart(2, '0');
@@ -233,7 +218,6 @@
             const anio = hoy.getFullYear();
             fechaActualEl.textContent = `${dia}/${mes}/${anio}`;
         }
-
         const agregarItem = () => {
             const row = document.createElement('tr');
             row.classList.add('item-row');
@@ -244,7 +228,6 @@
             `;
             itemsContainer.appendChild(row);
         };
-
         const calcularTotal = () => {
             let total = 0;
             document.querySelectorAll('.item-precio').forEach(input => {
@@ -252,7 +235,6 @@
             });
             totalPresupuestoEl.textContent = total.toFixed(2);
         };
-
         const inicializarFormulario = () => {
             clienteInput.value = '';
             equipoInput.value = '';
@@ -263,8 +245,6 @@
             numeroComprobanteEl.textContent = formatarNumero(getProximoNumero());
             mostrarFechaActual();
         };
-        
-        // --- MANEJO DE EVENTOS ---
         btnAgregarItem.addEventListener('click', agregarItem);
         itemsContainer.addEventListener('input', calcularTotal);
         itemsContainer.addEventListener('click', (e) => {
@@ -274,6 +254,7 @@
             }
         });
 
+        // --- MANEJADOR DE CLICK CORREGIDO ---
         btnGuardar.addEventListener('click', () => {
             const items = [];
             let formularioValido = true;
@@ -292,12 +273,15 @@
             const proximoNumero = getProximoNumero();
             localStorage.setItem('ultimoPresupuestoId', proximoNumero);
 
+            // 1. Llama a imprimir
             window.print();
             
-            inicializarFormulario();
+            // 2. ESPERA 1 SEGUNDO (1000ms) ANTES DE LIMPIAR EL FORMULARIO
+            // Esto le da al navegador móvil tiempo para generar el PDF.
+            setTimeout(inicializarFormulario, 1000);
         });
 
-        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
+        // --- INICIALIZACIÓN ---
         inicializarFormulario();
     });
     </script>
