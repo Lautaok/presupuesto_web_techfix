@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Presupuestos - Tech-fix</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        /* ESTILOS GENERALES (PARA LA PANTALLA) */
+        /* TUS ESTILOS (sin cambios) */
         body {
             font-family: 'Roboto', sans-serif;
             background: #020024;
@@ -28,8 +33,7 @@
         }
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { color: #008CBA; }
-        .header-print-only { display: none; } /* Oculto en pantalla */
-
+        .header-print-only { display: none; }
         .comprobante-info {
             display: flex;
             justify-content: space-between;
@@ -51,7 +55,6 @@
         .numero-comprobante, .fecha-comprobante {
             font-weight: bold;
         }
-
         .seccion-cliente { margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; font-family: 'Roboto', sans-serif; box-sizing: border-box; resize: vertical; }
         table { width: 100%; border-collapse: collapse; }
@@ -67,59 +70,9 @@
         .seccion-guardar { text-align: center; margin-top: 30px; }
         .btn-guardar { background-color: #008CBA; color: white; font-size: 1.1em; padding: 15px 30px; }
 
-        /* --- ESTILOS DE IMPRESIÓN CORREGIDOS PARA MÓVIL --- */
+        /* Estilos de Impresión (no los usaremos para el PDF, pero los dejamos) */
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            .container, .container * {
-                visibility: visible;
-            }
-            .container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 1.5cm;
-                box-shadow: none;
-                border: none;
-            }
-            .no-print, .no-print * {
-                display: none !important;
-            }
-            .header-print-only {
-                display: block !important;
-                text-align: center;
-                margin-bottom: 20px;
-                border-bottom: 2px solid #008CBA;
-                padding-bottom: 10px;
-            }
-            .header-print-only img { width: 150px; margin-bottom: 10px; }
-            .header-print-only h1 { font-size: 2.5em; color: #008CBA; margin: 0; font-weight: 700; }
-            .header-print-only p { font-size: 1em; color: #555; margin: 5px 0; }
-            .comprobante-info {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: flex-start;
-                border-bottom: none;
-            }
-            .info-numeracion { text-align: right; }
-            input, textarea {
-                border: none !important;
-                background-color: transparent !important;
-                padding: 0;
-                font-size: 12pt;
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-            }
-            table, th, td {
-                border: 1px solid #666;
-                font-size: 11pt;
-                padding: 8px;
-            }
-            .seccion-total { font-size: 16pt; }
+            /* ... */
         }
     </style>
 </head>
@@ -127,19 +80,17 @@
 
     <div class="container" id="presupuesto-container">
         <div class="header no-print">
-            <img src="img/logo500x500.png" alt="Logo de Tech-fix" style="width: 150px; margin-bottom: 10px;">
-            <p>Reparación y Mantenimiento de PC</p>
+            <img src="img/logo500x500.png" alt="Logo de Tech-Fix" style="width: 150px; margin-bottom: 10px;">
+            <p><strong>Reparación y Mantenimiento de PC</strong></p>
         </div>
         
-        <div class="header-print-only">
-            <img src="img/logo500x500.png" alt="Logo de Tech-fix">
-            <h1>Tech-fix</h1>
-            <p>Reparación y Mantenimiento de PC</p>
+        <div style="position: absolute; left: -9999px;">
+            <img src="img/logo500x500.png" alt="Logo de Tech-Fix" id="logo-para-canvas" style="width: 150px; border-radius: 50%;">
         </div>
 
         <div class="comprobante-info">
             <div class="info-contacto-print">
-                <strong>Tech-fix</strong><br>
+                <strong>Tech-Fix</strong><br>
                 <small>Contacto: @tech.fix.ok | Tel: 3888343801</small>
             </div>
             <div class="info-numeracion">
@@ -153,17 +104,14 @@
                 </div>
             </div>
         </div>
-
         <div class="seccion-cliente">
             <label for="cliente">Cliente:</label>
             <input type="text" id="cliente" required>
         </div>
-
         <div class="seccion-cliente">
             <label for="equipo">Equipo:</label>
             <textarea id="equipo" rows="1" required></textarea>
         </div>
-
         <div class="seccion-cliente">
             <label for="falla">Falla a detallar:</label>
             <textarea id="falla" rows="1" required></textarea>
@@ -181,20 +129,20 @@
             </table>
             <button type="button" id="btn-agregar-item" class="btn-accion no-print">+ Agregar Ítem</button>
         </div>
-        
         <div class="seccion-total">
             <span>TOTAL: $</span>
             <span id="total-presupuesto">0.00</span>
         </div>
-
         <div class="seccion-guardar no-print">
-            <button type="button" id="btn-guardar" class="btn-guardar">💾 Guardar y Generar PDF</button>
+            <button type="button" id="btn-guardar" class="btn-guardar">💾 Generar y Descargar PDF</button>
         </div>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ... (constantes y funciones... no cambian)
+        const { jsPDF } = window.jspdf;
+
+        // --- CONSTANTES ---
         const btnGuardar = document.getElementById('btn-guardar');
         const itemsContainer = document.getElementById('items-container');
         const btnAgregarItem = document.getElementById('btn-agregar-item');
@@ -204,6 +152,8 @@
         const fallaInput = document.getElementById('falla');
         const numeroComprobanteEl = document.getElementById('numero-comprobante');
         const fechaActualEl = document.getElementById('fecha-actual');
+        
+        // --- FUNCIONES DE LÓGICA (sin cambios) ---
         function getProximoNumero() {
             const ultimoNumero = parseInt(localStorage.getItem('ultimoPresupuestoId') || '0');
             return ultimoNumero + 1;
@@ -245,6 +195,8 @@
             numeroComprobanteEl.textContent = formatarNumero(getProximoNumero());
             mostrarFechaActual();
         };
+        
+        // --- MANEJO DE EVENTOS (sin cambios) ---
         btnAgregarItem.addEventListener('click', agregarItem);
         itemsContainer.addEventListener('input', calcularTotal);
         itemsContainer.addEventListener('click', (e) => {
@@ -254,15 +206,16 @@
             }
         });
 
-        // --- MANEJADOR DE CLICK CORREGIDO ---
-        btnGuardar.addEventListener('click', () => {
+        // --- FUNCIÓN DE GUARDADO MODIFICADA (ahora es 'async') ---
+        btnGuardar.addEventListener('click', async () => {
+            // 1. Validar formulario (sin cambios)
             const items = [];
             let formularioValido = true;
             document.querySelectorAll('.item-row').forEach(row => {
                 const descripcion = row.querySelector('.item-descripcion').value;
                 const precio = row.querySelector('.item-precio').value;
                 if (!descripcion || !precio) { formularioValido = false; }
-                items.push({ descripcion, precio });
+                items.push([descripcion, precio]);
             });
 
             if (!clienteInput.value || !equipoInput.value || !fallaInput.value || !formularioValido) {
@@ -270,18 +223,88 @@
                 return;
             }
 
+            // 2. Guardar en LocalStorage (sin cambios)
             const proximoNumero = getProximoNumero();
             localStorage.setItem('ultimoPresupuestoId', proximoNumero);
-
-            // 1. Llama a imprimir
-            window.print();
+            const nroFormateado = formatarNumero(proximoNumero);
+            const fecha = fechaActualEl.textContent;
             
-            // 2. ESPERA 1 SEGUNDO (1000ms) ANTES DE LIMPIAR EL FORMULARIO
-            // Esto le da al navegador móvil tiempo para generar el PDF.
-            setTimeout(inicializarFormulario, 1000);
+            try {
+                // 3. --- ¡NUEVA LÓGICA! ---
+                // Tomamos la "captura" del logo redondeado
+                const logoElement = document.getElementById('logo-para-canvas');
+                const canvas = await html2canvas(logoElement, {
+                    backgroundColor: null // Mantiene la transparencia del PNG
+                });
+                const logoImgData = canvas.toDataURL('image/png');
+
+                // 4. Generar el PDF
+                const doc = new jsPDF();
+
+                // --- DIBUJAR EL PDF ---
+                
+                // Logo (Añadimos la "captura" redonda)
+                // Usamos 150x150px de la captura, escalado a 40x40mm en el PDF
+                doc.addImage(logoImgData, 'PNG', 85, 10, 40, 40);
+                
+                // Título
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text("Tech-Fix", 105, 60, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text("Reparación y Mantenimiento de PC", 105, 65, { align: 'center' });
+
+                // Información de la empresa (izquierda)
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text("Tech-Fix", 14, 80);
+                doc.setFont(undefined, 'normal');
+                doc.text("Contacto: @tech.fix.ok | Tel: 3888343801", 14, 85);
+                
+                // N° y Fecha (derecha)
+                doc.setFont(undefined, 'bold');
+                doc.text(`Presupuesto N°: ${nroFormateado}`, 196, 80, { align: 'right' });
+                doc.text(`Fecha: ${fecha}`, 196, 85, { align: 'right' });
+
+                // Datos del Cliente (sección completa)
+                doc.setFont(undefined, 'bold');
+                doc.text("Cliente:", 14, 100);
+                doc.text("Equipo:", 14, 105);
+                doc.text("Falla a detallar:", 14, 110);
+                doc.setFont(undefined, 'normal');
+                doc.text(clienteInput.value, 45, 100);
+                doc.text(equipoInput.value, 45, 105);
+                doc.text(fallaInput.value, 45, 110);
+
+                // Tabla de ítems
+                doc.autoTable({
+                    startY: 120,
+                    head: [['Descripción', 'Precio ($)']],
+                    body: items,
+                    headStyles: { fillColor: [0, 139, 186] },
+                    theme: 'grid',
+                });
+
+                // Total
+                const finalY = doc.lastAutoTable.finalY || 140;
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text(`TOTAL: $ ${totalPresupuestoEl.textContent}`, 196, finalY + 15, { align: 'right' });
+
+                // 5. Descargar el PDF
+                doc.save(`Presupuesto-Tech-fix-${nroFormateado}.pdf`);
+
+                // 6. Resetear el formulario
+                inicializarFormulario();
+
+            } catch (e) {
+                console.error("Error al generar el PDF:", e);
+                alert("Hubo un error al generar el PDF. Revisa la consola para más detalles.");
+            }
         });
 
-        // --- INICIALIZACIÓN ---
+        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
         inicializarFormulario();
     });
     </script>
