@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        /* TUS ESTILOS (sin cambios) */
+        /* ESTILOS GENERALES (PARA LA PANTALLA) */
         body {
             font-family: 'Roboto', sans-serif;
             background: #020024;
@@ -70,7 +70,6 @@
         .seccion-guardar { text-align: center; margin-top: 30px; }
         .btn-guardar { background-color: #008CBA; color: white; font-size: 1.1em; padding: 15px 30px; }
 
-        /* Estilos de Impresión (no los usaremos para el PDF, pero los dejamos) */
         @media print {
             /* ... */
         }
@@ -80,17 +79,17 @@
 
     <div class="container" id="presupuesto-container">
         <div class="header no-print">
-            <img src="img/logo500x500.png" alt="Logo de Tech-Fix" style="width: 150px; margin-bottom: 10px;">
+            <img src="img/logo500x500.png" alt="Logo de Tech-fix" style="width: 150px; margin-bottom: 10px;">
             <p><strong>Reparación y Mantenimiento de PC</strong></p>
         </div>
         
         <div style="position: absolute; left: -9999px;">
-            <img src="img/logo500x500.png" alt="Logo de Tech-Fix" id="logo-para-canvas" style="width: 150px; border-radius: 50%;">
+            <img src="img/logo500x500.png" alt="Logo de Tech-fix" id="logo-para-canvas" style="width: 150px; border-radius: 50%;">
         </div>
 
         <div class="comprobante-info">
             <div class="info-contacto-print">
-                <strong>Tech-Fix</strong><br>
+                <strong>Tech-fix</strong><br>
                 <small>Contacto: @tech.fix.ok | Tel: 3888343801</small>
             </div>
             <div class="info-numeracion">
@@ -129,6 +128,7 @@
             </table>
             <button type="button" id="btn-agregar-item" class="btn-accion no-print">+ Agregar Ítem</button>
         </div>
+        
         <div class="seccion-total">
             <span>TOTAL: $</span>
             <span id="total-presupuesto">0.00</span>
@@ -140,6 +140,12 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- CÓDIGO DE RESETEO AUTOMÁTICO (Si el contador es muy viejo) ---
+        const ultimoNumeroGuardado = parseInt(localStorage.getItem('ultimoPresupuestoId') || '0');
+        if (ultimoNumeroGuardado < 29) {
+            localStorage.setItem('ultimoPresupuestoId', 29);
+        }
+
         const { jsPDF } = window.jspdf;
 
         // --- CONSTANTES ---
@@ -153,9 +159,9 @@
         const numeroComprobanteEl = document.getElementById('numero-comprobante');
         const fechaActualEl = document.getElementById('fecha-actual');
         
-        // --- FUNCIONES DE LÓGICA (sin cambios) ---
+        // --- FUNCIONES DE LÓGICA ---
         function getProximoNumero() {
-            const ultimoNumero = parseInt(localStorage.getItem('ultimoPresupuestoId') || '130');
+            const ultimoNumero = parseInt(localStorage.getItem('ultimoPresupuestoId') || '0');
             return ultimoNumero + 1;
         }
         function formatarNumero(num) {
@@ -196,7 +202,7 @@
             mostrarFechaActual();
         };
         
-        // --- MANEJO DE EVENTOS (sin cambios) ---
+        // --- MANEJO DE EVENTOS ---
         btnAgregarItem.addEventListener('click', agregarItem);
         itemsContainer.addEventListener('input', calcularTotal);
         itemsContainer.addEventListener('click', (e) => {
@@ -206,9 +212,8 @@
             }
         });
 
-        // --- FUNCIÓN DE GUARDADO MODIFICADA (ahora es 'async') ---
+        // --- FUNCIÓN DE GUARDADO ---
         btnGuardar.addEventListener('click', async () => {
-            // 1. Validar formulario (sin cambios)
             const items = [];
             let formularioValido = true;
             document.querySelectorAll('.item-row').forEach(row => {
@@ -223,51 +228,41 @@
                 return;
             }
 
-            // 2. Guardar en LocalStorage (sin cambios)
+            // Guardar en LocalStorage
             const proximoNumero = getProximoNumero();
             localStorage.setItem('ultimoPresupuestoId', proximoNumero);
             const nroFormateado = formatarNumero(proximoNumero);
             const fecha = fechaActualEl.textContent;
             
             try {
-                // 3. --- ¡NUEVA LÓGICA! ---
-                // Tomamos la "captura" del logo redondeado
+                // Tomar "captura" del logo
                 const logoElement = document.getElementById('logo-para-canvas');
-                const canvas = await html2canvas(logoElement, {
-                    backgroundColor: null // Mantiene la transparencia del PNG
-                });
+                const canvas = await html2canvas(logoElement, { backgroundColor: null });
                 const logoImgData = canvas.toDataURL('image/png');
 
-                // 4. Generar el PDF
+                // Generar el PDF
                 const doc = new jsPDF();
 
-                // --- DIBUJAR EL PDF ---
-                
-                // Logo (Añadimos la "captura" redonda)
-                // Usamos 150x150px de la captura, escalado a 40x40mm en el PDF
+                // Dibujar el PDF
                 doc.addImage(logoImgData, 'PNG', 85, 10, 40, 40);
                 
-                // Título
                 doc.setFontSize(16);
                 doc.setFont(undefined, 'bold');
-                doc.text("Tech-Fix", 105, 60, { align: 'center' });
+                doc.text("Tech-fix", 105, 60, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont(undefined, 'normal');
                 doc.text("Reparación y Mantenimiento de PC", 105, 65, { align: 'center' });
-
-                // Información de la empresa (izquierda)
+                
                 doc.setFontSize(10);
                 doc.setFont(undefined, 'bold');
-                doc.text("Tech-Fix", 14, 80);
+                doc.text("Tech-fix", 14, 80);
                 doc.setFont(undefined, 'normal');
                 doc.text("Contacto: @tech.fix.ok | Tel: 3888343801", 14, 85);
                 
-                // N° y Fecha (derecha)
                 doc.setFont(undefined, 'bold');
                 doc.text(`Presupuesto N°: ${nroFormateado}`, 196, 80, { align: 'right' });
                 doc.text(`Fecha: ${fecha}`, 196, 85, { align: 'right' });
-
-                // Datos del Cliente (sección completa)
+                
                 doc.setFont(undefined, 'bold');
                 doc.text("Cliente:", 14, 100);
                 doc.text("Equipo:", 14, 105);
@@ -276,8 +271,7 @@
                 doc.text(clienteInput.value, 45, 100);
                 doc.text(equipoInput.value, 45, 105);
                 doc.text(fallaInput.value, 45, 110);
-
-                // Tabla de ítems
+                
                 doc.autoTable({
                     startY: 120,
                     head: [['Descripción', 'Precio ($)']],
@@ -285,17 +279,27 @@
                     headStyles: { fillColor: [0, 139, 186] },
                     theme: 'grid',
                 });
-
+                
                 // Total
                 const finalY = doc.lastAutoTable.finalY || 140;
                 doc.setFontSize(16);
                 doc.setFont(undefined, 'bold');
                 doc.text(`TOTAL: $ ${totalPresupuestoEl.textContent}`, 196, finalY + 15, { align: 'right' });
 
-                // 5. Descargar el PDF
+                // --- AGREGAR EL AVISO LEGAL ---
+                // Calculamos una posición debajo del total (finalY + 30)
+                doc.setFontSize(8); // Letra pequeña para el aviso
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(80); // Color gris oscuro
+                
+                const aviso = "Los equipos deben ser retirados en un lapso de 60 días, de lo contrario la empresa no se hace responsable de la perdida o daño del mismo.";
+                // Usamos maxWidth para que si es muy largo, se ajuste solo, aunque centrado
+                doc.text(aviso, 105, finalY + 30, { align: 'center', maxWidth: 180 });
+
+                // Descargar el PDF
                 doc.save(`Presupuesto-Tech-fix-${nroFormateado}.pdf`);
 
-                // 6. Resetear el formulario
+                // Resetear el formulario
                 inicializarFormulario();
 
             } catch (e) {
